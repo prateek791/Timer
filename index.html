@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
-<<link rel="icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-<link rel="manifest" href="manifest.json">>
+<link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deep Focus</title>
@@ -20,7 +20,7 @@ body {
   text-align: center;
 }
 .container { padding: 20px; }
-input, select, button {
+input, button {
   width: 100%;
   padding: 14px;
   margin: 10px 0;
@@ -28,13 +28,12 @@ input, select, button {
   border-radius: 6px;
   border: none;
 }
-input, select { background: #1c2045; color: #fff; }
+input { background: #1c2045; color: #fff; }
 button { background: #5a63ff; color: #fff; font-weight: bold; }
 button.secondary { background: #2a2f66; }
 .hidden { display: none; }
 .timer { font-size: 60px; margin: 30px 0; }
 .small { font-size: 14px; opacity: 0.8; }
-hr { border: none; border-top: 1px solid #333; margin: 20px 0; }
 .todayBox {
   background:#161a35;
   padding:12px;
@@ -49,39 +48,21 @@ hr { border: none; border-top: 1px solid #333; margin: 20px 0; }
 
 <!-- SETUP -->
 <div class="container" id="setup">
-  <h2>🎯 Deep Focus Session</h2>
+  <h2>🎯 Deep Focus</h2>
 
   <div class="todayBox" id="todayTime">📅 Today: 0 min</div>
 
+  <div class="small">
+    Daily Goal: <b>10 hours</b><br>
+    Session Limit: <b>150 minutes</b><br>
+    Starting Block: <b>25 minutes</b>
+  </div>
+
   <input id="task" placeholder="What exactly will you study?" />
 
-  <label>Starting focus block</label>
-  <select id="startBlock">
-    <option value="25">25 minutes</option>
-    <option value="35">35 minutes</option>
-    <option value="45">45 minutes</option>
-  </select>
-
-  <label>Daily focus goal</label>
-  <select id="dailyGoal">
-    <option value="60">1 hour</option>
-    <option value="120">2 hours</option>
-    <option value="180">3 hours</option>
-    <option value="300">5 hours</option>
-    <option value="600">10 hours</option>
-  </select>
-
-  <label>Daily reminder time</label>
   <input type="time" id="reminderTime" value="18:00">
 
-  <label>Maximum session length</label>
-  <select id="maxSession">
-    <option value="90">90 minutes</option>
-    <option value="120">120 minutes</option>
-    <option value="180">180 minutes</option>
-  </select>
-
-  <button onclick="startSession()">START DEEP FOCUS</button>
+  <button onclick="startSession()">START SESSION</button>
 </div>
 
 <!-- FOCUS -->
@@ -94,19 +75,20 @@ hr { border: none; border-top: 1px solid #333; margin: 20px 0; }
 
 <!-- SUMMARY -->
 <div class="container hidden" id="summary">
-  <h2>📊 Session Summary</h2>
+  <h2>📊 Summary</h2>
   <p id="summaryText"></p>
-  <hr>
-  <p id="todaySummary"></p>
-  <hr>
   <p id="streakText"></p>
-  <hr>
   <p id="historyText"></p>
   <button onclick="location.reload()">New Session</button>
 </div>
 
 <script>
-let task="", blockMinutes=25, maxSession=90, dailyGoal=120;
+/* ===== FIXED CONSTANTS ===== */
+const DAILY_GOAL = 600;     // 10 hours
+const START_BLOCK = 25;    // minutes
+const MAX_SESSION = 150;   // minutes
+
+let task="", blockMinutes=START_BLOCK;
 let totalFocused=0, driftCount=0, timer, secondsLeft;
 
 function todayKey() {
@@ -118,62 +100,35 @@ function minutesToHM(mins){
   return h>0 ? `${h}h ${m}m` : `${m} min`;
 }
 
-/* ---------- REMINDER ---------- */
-function checkReminder() {
-  let reminder = localStorage.getItem("reminderTime");
-  let history = JSON.parse(localStorage.getItem("focusHistory") || "{}");
-  let today = todayKey();
-  if (!reminder) return;
-
-  let now = new Date();
-  let [h, m] = reminder.split(":");
-  let r = new Date();
-  r.setHours(h, m, 0, 0);
-
-  if (now >= r && !history[today]) {
-    alert("⏰ Reminder: You haven't started your focus session today.");
-  }
-}
-
-/* ---------- TODAY DISPLAY ---------- */
-function updateTodayDisplay(){
-  let history = JSON.parse(localStorage.getItem("focusHistory")||"{}");
-  let mins = history[todayKey()] || 0;
+function updateToday(){
+  let h = JSON.parse(localStorage.getItem("focusHistory")||"{}");
   document.getElementById("todayTime").innerText =
-    `📅 Today: ${minutesToHM(mins)} studied`;
+    `📅 Today: ${minutesToHM(h[todayKey()]||0)}`;
 }
 
-/* ---------- START ---------- */
 function startSession() {
   task = document.getElementById("task").value.trim();
-  if (!task) { alert("Enter ONE clear task."); return; }
+  if (!task) return alert("Enter ONE clear task.");
 
-  blockMinutes = +document.getElementById("startBlock").value;
-  maxSession = +document.getElementById("maxSession").value;
-  dailyGoal = +document.getElementById("dailyGoal").value;
-
-  localStorage.setItem(
-    "reminderTime",
+  localStorage.setItem("reminderTime",
     document.getElementById("reminderTime").value
   );
 
   document.getElementById("setup").classList.add("hidden");
   document.getElementById("focus").classList.remove("hidden");
-  document.getElementById("currentTask").innerText = "Current task: " + task;
+  document.getElementById("currentTask").innerText = "Task: " + task;
 
   startBlock();
 }
 
-/* ---------- TIMER ---------- */
 function startBlock() {
   secondsLeft = blockMinutes * 60;
-  updateTime();
   timer = setInterval(tick, 1000);
+  updateTime();
 }
 
 function tick() {
-  secondsLeft--;
-  totalFocused++;
+  secondsLeft--; totalFocused++;
   if (secondsLeft <= 0) { clearInterval(timer); nextBlock(); }
   updateTime();
 }
@@ -194,64 +149,30 @@ function drifted() {
 }
 
 function nextBlock() {
-  if (totalFocused/60 >= maxSession) { endSession(); return; }
+  if (totalFocused/60 >= MAX_SESSION) return endSession();
   if (blockMinutes < 60) blockMinutes += 10;
   startBlock();
 }
 
-/* ---------- END ---------- */
 function endSession() {
   document.getElementById("focus").classList.add("hidden");
   document.getElementById("summary").classList.remove("hidden");
 
   let mins = Math.floor(totalFocused/60);
-  saveHistory(mins);
-  updateStreak();
-
-  let todayTotal = JSON.parse(localStorage.getItem("focusHistory"))[todayKey()];
+  let h = JSON.parse(localStorage.getItem("focusHistory")||"{}");
+  let k = todayKey();
+  h[k] = (h[k]||0) + mins;
+  localStorage.setItem("focusHistory", JSON.stringify(h));
 
   document.getElementById("summaryText").innerHTML =
-    `Focused This Session: <b>${mins} min</b><br>
-     Mind Drifts: <b>${driftCount}</b><br>
-     Daily Goal: <b>${minutesToHM(dailyGoal)}</b> → ${todayTotal>=dailyGoal?"✅ Achieved":"❌ Not met"}`;
+    `Session: <b>${mins} min</b><br>
+     Today Total: <b>${minutesToHM(h[k])}</b><br>
+     Goal: <b>10 hours</b> → ${h[k]>=DAILY_GOAL?"✅":"❌"}`;
 
-  document.getElementById("todaySummary").innerHTML =
-    `📅 Today Total: <b>${minutesToHM(todayTotal)}</b>`;
+  updateToday();
 }
 
-function saveHistory(mins) {
-  let data = JSON.parse(localStorage.getItem("focusHistory")||"{}");
-  let k = todayKey();
-  data[k] = (data[k]||0) + mins;
-  localStorage.setItem("focusHistory", JSON.stringify(data));
-
-  let txt = Object.keys(data).slice(-5)
-    .map(d=>`${d}: ${minutesToHM(data[d])}`).join("<br>");
-  document.getElementById("historyText").innerHTML =
-    "<b>Recent Days</b><br>"+txt;
-}
-
-function updateStreak() {
-  let last = localStorage.getItem("lastFocusDate");
-  let streak = +(localStorage.getItem("focusStreak")||0);
-  let today = todayKey();
-
-  if (last) {
-    let diff = (new Date(today)-new Date(last))/(1000*60*60*24);
-    if (diff===1) streak++;
-    else if (diff>1) streak=1;
-  } else streak=1;
-
-  localStorage.setItem("lastFocusDate", today);
-  localStorage.setItem("focusStreak", streak);
-
-  document.getElementById("streakText").innerHTML =
-    `🔥 Current Streak: <b>${streak} day(s)</b>`;
-}
-
-/* ---------- INIT ---------- */
-updateTodayDisplay();
-checkReminder();
+updateToday();
 </script>
 
 </body>
