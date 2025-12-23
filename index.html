@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<<link rel="icon" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="manifest" href="manifest.json">>
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Deep Focus</title>
@@ -55,8 +53,7 @@ button.secondary { background: #2a2f66; }
   <div class="small">
     Daily Goal: <b>10 hours</b><br>
     Session Limit: <b>150 minutes</b><br>
-    Starting Block: <b>25 minutes</b><br>
-    Reminder: <b>12:00 AM</b>
+    Starting Block: <b>25 minutes</b>
   </div>
 
   <input id="task" placeholder="What exactly will you study?" />
@@ -86,8 +83,6 @@ button.secondary { background: #2a2f66; }
 const DAILY_GOAL = 600;     // 10 hours
 const START_BLOCK = 25;    // minutes
 const MAX_SESSION = 150;   // minutes
-const REMINDER_HOUR = 0;   // 12:00 AM
-const REMINDER_MIN = 0;
 
 let task="", blockMinutes=START_BLOCK;
 let totalFocused=0, driftCount=0, timer, secondsLeft;
@@ -99,20 +94,6 @@ function todayKey() {
 function minutesToHM(mins){
   let h=Math.floor(mins/60), m=mins%60;
   return h>0 ? `${h}h ${m}m` : `${m} min`;
-}
-
-/* ---------- REMINDER ---------- */
-function checkReminder() {
-  let history = JSON.parse(localStorage.getItem("focusHistory") || "{}");
-  let today = todayKey();
-
-  let now = new Date();
-  let r = new Date();
-  r.setHours(REMINDER_HOUR, REMINDER_MIN, 0, 0);
-
-  if (now >= r && !history[today]) {
-    alert("⏰ Reminder: You haven't started your focus session today.");
-  }
 }
 
 /* ---------- TODAY ---------- */
@@ -186,9 +167,7 @@ function endSession() {
   updateToday();
 }
 
-/* ---------- INIT ---------- */
 updateToday();
-checkReminder();
 </script>
 
 </body>
