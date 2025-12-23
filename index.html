@@ -55,12 +55,11 @@ button.secondary { background: #2a2f66; }
   <div class="small">
     Daily Goal: <b>10 hours</b><br>
     Session Limit: <b>150 minutes</b><br>
-    Starting Block: <b>25 minutes</b>
+    Starting Block: <b>25 minutes</b><br>
+    Reminder: <b>12:00 AM</b>
   </div>
 
   <input id="task" placeholder="What exactly will you study?" />
-
-  <input type="time" id="reminderTime" value="18:00">
 
   <button onclick="startSession()">START SESSION</button>
 </div>
@@ -87,6 +86,8 @@ button.secondary { background: #2a2f66; }
 const DAILY_GOAL = 600;     // 10 hours
 const START_BLOCK = 25;    // minutes
 const MAX_SESSION = 150;   // minutes
+const REMINDER_HOUR = 0;   // 12:00 AM
+const REMINDER_MIN = 0;
 
 let task="", blockMinutes=START_BLOCK;
 let totalFocused=0, driftCount=0, timer, secondsLeft;
@@ -100,6 +101,21 @@ function minutesToHM(mins){
   return h>0 ? `${h}h ${m}m` : `${m} min`;
 }
 
+/* ---------- REMINDER ---------- */
+function checkReminder() {
+  let history = JSON.parse(localStorage.getItem("focusHistory") || "{}");
+  let today = todayKey();
+
+  let now = new Date();
+  let r = new Date();
+  r.setHours(REMINDER_HOUR, REMINDER_MIN, 0, 0);
+
+  if (now >= r && !history[today]) {
+    alert("⏰ Reminder: You haven't started your focus session today.");
+  }
+}
+
+/* ---------- TODAY ---------- */
 function updateToday(){
   let h = JSON.parse(localStorage.getItem("focusHistory")||"{}");
   document.getElementById("todayTime").innerText =
@@ -110,10 +126,6 @@ function startSession() {
   task = document.getElementById("task").value.trim();
   if (!task) return alert("Enter ONE clear task.");
 
-  localStorage.setItem("reminderTime",
-    document.getElementById("reminderTime").value
-  );
-
   document.getElementById("setup").classList.add("hidden");
   document.getElementById("focus").classList.remove("hidden");
   document.getElementById("currentTask").innerText = "Task: " + task;
@@ -121,6 +133,7 @@ function startSession() {
   startBlock();
 }
 
+/* ---------- TIMER ---------- */
 function startBlock() {
   secondsLeft = blockMinutes * 60;
   timer = setInterval(tick, 1000);
@@ -154,6 +167,7 @@ function nextBlock() {
   startBlock();
 }
 
+/* ---------- END ---------- */
 function endSession() {
   document.getElementById("focus").classList.add("hidden");
   document.getElementById("summary").classList.remove("hidden");
@@ -172,7 +186,9 @@ function endSession() {
   updateToday();
 }
 
+/* ---------- INIT ---------- */
 updateToday();
+checkReminder();
 </script>
 
 </body>
